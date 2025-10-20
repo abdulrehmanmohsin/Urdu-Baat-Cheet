@@ -1,5 +1,3 @@
-
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,8 +15,6 @@ import time
 import sys
 from collections import Counter
 from typing import List, Dict, Tuple
-import sacrebleu
-from tqdm.notebook import tqdm  # Use notebook version
 
 # Set random seeds
 torch.manual_seed(42)
