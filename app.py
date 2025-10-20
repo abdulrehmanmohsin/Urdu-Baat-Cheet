@@ -1,7 +1,7 @@
 import streamlit as st
 import torch
 from torch.serialization import add_safe_globals
-from Assignment2(fromscratch) import (
+from Assignment2_fromscratch import (
     BPETokenizer, 
     UrduChatbotDataset, 
     Transformer, 
@@ -25,7 +25,7 @@ def load_model():
         tokenizer = checkpoint['tokenizer']
         vocab_size = checkpoint['vocab_size']
 
-        from Assignment2(fromscratch) import Transformer, UrduChatbotDataset
+        from Assignment2_fromscratch import Transformer, UrduChatbotDataset
 
         model = Transformer(
             vocab_size=vocab_size,
