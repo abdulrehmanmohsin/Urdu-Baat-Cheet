@@ -25,7 +25,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 if torch.cuda.is_available():
     print(f"GPU: {torch.cuda.get_device_name(0)}")
-base_dir = "/content/drive/MyDrive/NLPA2"
+
 
 """# Data Cleaning"""
 
@@ -99,10 +99,8 @@ def process_csv_file(input_file, output_file):
         print(f"⚠️ Error: {e}")
 
 
-input_file = os.path.join(base_dir, "final_main_dataset.csv")
-output_file = os.path.join(base_dir, "cleaned_urdu_text.txt")
 
-process_csv_file(input_file, output_file)
+process_csv_file("final_main_dataset.csv", "cleaned_urdu_text.txt")
 
 """# BPE TOKENIZER"""
 
@@ -558,8 +556,8 @@ config = {
 
 # Load data
 print("Loading data...")
-data_path = os.path.join(base_dir, "cleaned_urdu_text.txt")
-with open(data_path, 'r', encoding='utf-8') as f:
+
+with open("cleaned_urdu_text.txt", 'r', encoding='utf-8') as f:
     sentences = [line.strip() for line in f if line.strip()]
 
 print(f"Loaded {len(sentences)} sentences")
