@@ -156,6 +156,74 @@ class BPETokenizer:
         tok.id_to_token = {int(v): k for k, v in tok.token_to_id.items()}
         return tok
 
+"""# Data Preparation"""
+
+class UrduChatbotDataset(Dataset):
+    """Dataset for Urdu chatbot with full sequence next-token prediction"""
+
+    def __init__(self, sentences, tokenizer, max_len=50):
+        self.sentences = sentences
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+
+        # Special tokens
+        self.pad_token = '<PAD>'
+        self.start_token = '<START>'
+        self.end_token = '<END>'
+        self.unk_token = '<UNK>'
+
+        for token in [self.pad_token, self.start_token, self.end_token, self.unk_token]:
+            if token not in self.tokenizer.token_to_id:
+                idx = len(self.tokenizer.token_to_id)
+                self.tokenizer.token_to_id[token] = idx
+                self.tokenizer.id_to_token[idx] = token
+
+        self.pad_idx = self.tokenizer.token_to_id[self.pad_token]
+        self.start_idx = self.tokenizer.token_to_id[self.start_token]
+        self.end_idx = self.tokenizer.token_to_id[self.end_token]
+        self.unk_idx = self.tokenizer.token_to_id[self.unk_token]
+
+    def __len__(self):
+        return len(self.sentences)
+
+    def __getitem__(self, idx):
+        sentence = self.sentences[idx]
+        tokens = self.tokenizer.tokenize(sentence)
+        token_ids = [self.tokenizer.token_to_id.get(t, self.unk_idx) for t in tokens]
+
+        # Split into prefix and continuation
+        if len(token_ids) > 4:
+            split_point = len(token_ids) // 2
+            src_ids = token_ids[:split_point]
+            tgt_ids = token_ids[split_point:]
+        else:
+            src_ids = token_ids[:-1]
+            tgt_ids = token_ids[-1:]
+
+        # --- TRUNCATE before padding ---
+        src_ids = src_ids[:self.max_len]
+        tgt_ids = tgt_ids[:self.max_len - 2]  # leave room for <START> and <END>
+
+        # Encoder sequence
+        encoder_ids = src_ids + [self.pad_idx] * (self.max_len - len(src_ids))
+
+        # Decoder sequences
+        decoder_input_ids = [self.start_idx] + tgt_ids
+        decoder_target_ids = tgt_ids + [self.end_idx]
+
+        # Pad to fixed length
+        decoder_input_ids = decoder_input_ids + [self.pad_idx] * (self.max_len - len(decoder_input_ids))
+        decoder_target_ids = decoder_target_ids + [self.pad_idx] * (self.max_len - len(decoder_target_ids))
+
+        # Final safety truncation
+        decoder_input_ids = decoder_input_ids[:self.max_len]
+        decoder_target_ids = decoder_target_ids[:self.max_len]
+
+        return {
+            'encoder_input': torch.tensor(encoder_ids, dtype=torch.long),
+            'decoder_input': torch.tensor(decoder_input_ids, dtype=torch.long),
+            'decoder_target': torch.tensor(decoder_target_ids, dtype=torch.long)
+        }
 
 # ------------------------------------
 # Minimal Dataset meta to inject special tokens
