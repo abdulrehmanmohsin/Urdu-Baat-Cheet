@@ -11,8 +11,7 @@ from urdu_chatbot_complete import (
 
 # Set page config
 st.set_page_config(
-    page_title="Urdu Chatbot",
-    page_icon="🤖",
+    page_title="Urdu Main BaatCheet",
     layout="centered"
 )
 
@@ -61,11 +60,11 @@ def load_model():
         st.stop()
 
 # Page title and description
-st.title("🤖 Urdu Conversational Chatbot")
-st.markdown("""
-This chatbot uses a custom Transformer architecture to generate Urdu text responses.
-Try typing some Urdu text below and see how it responds!
-""")
+st.title("Urdu Main Baat Cheet")
+st.markdown("""Built with a custom Transformer architecture trained on Urdu text.""")
+st.markdown("""Developed by Abdulrehman and Daniyal Shafiq""")
+
+
 
 # Load model
 model, tokenizer, dataset = load_model()
