@@ -659,7 +659,7 @@ config = {
 # Load data
 print("Loading data...")
 #data_path = os.path.join(base_dir, "cleaned_urdu_text.txt")
-with open(data_path, 'r', encoding='utf-8') as f:
+with open("cleaned_urdu_text.txt", 'r', encoding='utf-8') as f:
     sentences = [line.strip() for line in f if line.strip()]
 
 print(f"Loaded {len(sentences)} sentences")
