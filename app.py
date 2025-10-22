@@ -40,7 +40,21 @@ def load_model():
         if tokenizer is None:
             st.info("Loading tokenizer from tokenizer.json...")
             tokenizer = BPETokenizer.load(tokenizer_path)
-
+        config = checkpoint.get("config")
+        
+        # Fallback if config missing
+        if config is None:
+            config = {
+                "vocab_size": 5000,
+                "d_model": 256,
+                "num_heads": 2,
+                "d_ff": 512,
+                "num_encoder_layers": 2,
+                "num_decoder_layers": 2,
+                "max_len": 50,
+                "dropout": 0.3
+            }
+        
         # Build dataset meta tokens (<PAD>, <START>, <END>, <UNK>)
         dataset = UrduChatbotDataset([], tokenizer, config["max_len"])
 
