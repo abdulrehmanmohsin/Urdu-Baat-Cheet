@@ -102,8 +102,8 @@ def process_csv_file(input_file, output_file):
         print(f"⚠️ Error: {e}")
 
 
-input_file = os.path.join(base_dir, "final_main_dataset.csv")
-output_file = os.path.join(base_dir, "cleaned_urdu_text.txt")
+#input_file = os.path.join(base_dir, "final_main_dataset.csv")
+#output_file = os.path.join(base_dir, "cleaned_urdu_text.txt")
 
 process_csv_file(input_file, output_file)
 
