@@ -658,7 +658,7 @@ config = {
 
 # Load data
 print("Loading data...")
-data_path = os.path.join(base_dir, "cleaned_urdu_text.txt")
+#data_path = os.path.join(base_dir, "cleaned_urdu_text.txt")
 with open(data_path, 'r', encoding='utf-8') as f:
     sentences = [line.strip() for line in f if line.strip()]
 
@@ -749,7 +749,7 @@ print("Training complete!")
 """# Testing"""
 
 # Load best model
-best_model=os.path.join(base_dir, "best_BLEU_model.pt")
+#best_model=os.path.join(base_dir, "best_BLEU_model.pt")
 model.load_state_dict(torch.load(best_model, map_location=device))
 
 # Test generation
