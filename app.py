@@ -4,7 +4,7 @@ from assignment2_fromscratch import (
     BPETokenizer,
     UrduChatbotDataset,
     Transformer,
-    normalize_text,
+    normalize_urdu_text,
     generate_text
 )
 
