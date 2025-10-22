@@ -2,7 +2,6 @@
 import math
 import json
 import re
-import random
 from collections import Counter
 from typing import List, Dict, Tuple, Optional
 
@@ -66,7 +65,6 @@ class BPETokenizer:
         self.token_to_id: Dict[str, int] = {}
         self.id_to_token: Dict[int, str] = {}
 
-    # ---- training helpers ----
     def get_stats(self, words: Dict[str, int]) -> Counter:
         pairs = Counter()
         for word, freq in words.items():
@@ -84,13 +82,12 @@ class BPETokenizer:
             new_words[new_word] = words[word]
         return new_words
 
-    # ---- core API ----
     def train(self, corpus: List[str], verbose: bool = False):
         word_freqs = Counter()
         for text in corpus:
             word_freqs.update(text.split())
 
-        # RTL-aware: add </w> at beginning
+        # RTL-aware: </w> at beginning
         words = {}
         for word, freq in word_freqs.items():
             words['</w> ' + ' '.join(list(word))] = freq
@@ -134,7 +131,7 @@ class BPETokenizer:
             tokens.extend(word_tokens)
         return tokens
 
-    # ---- persistence ----
+    # persistence
     def save(self, path: str):
         data = {
             "vocab_size": self.vocab_size,
@@ -156,80 +153,12 @@ class BPETokenizer:
         tok.id_to_token = {int(v): k for k, v in tok.token_to_id.items()}
         return tok
 
-"""# Data Preparation"""
-
-class UrduChatbotDataset(Dataset):
-    """Dataset for Urdu chatbot with full sequence next-token prediction"""
-
-    def __init__(self, sentences, tokenizer, max_len=50):
-        self.sentences = sentences
-        self.tokenizer = tokenizer
-        self.max_len = max_len
-
-        # Special tokens
-        self.pad_token = '<PAD>'
-        self.start_token = '<START>'
-        self.end_token = '<END>'
-        self.unk_token = '<UNK>'
-
-        for token in [self.pad_token, self.start_token, self.end_token, self.unk_token]:
-            if token not in self.tokenizer.token_to_id:
-                idx = len(self.tokenizer.token_to_id)
-                self.tokenizer.token_to_id[token] = idx
-                self.tokenizer.id_to_token[idx] = token
-
-        self.pad_idx = self.tokenizer.token_to_id[self.pad_token]
-        self.start_idx = self.tokenizer.token_to_id[self.start_token]
-        self.end_idx = self.tokenizer.token_to_id[self.end_token]
-        self.unk_idx = self.tokenizer.token_to_id[self.unk_token]
-
-    def __len__(self):
-        return len(self.sentences)
-
-    def __getitem__(self, idx):
-        sentence = self.sentences[idx]
-        tokens = self.tokenizer.tokenize(sentence)
-        token_ids = [self.tokenizer.token_to_id.get(t, self.unk_idx) for t in tokens]
-
-        # Split into prefix and continuation
-        if len(token_ids) > 4:
-            split_point = len(token_ids) // 2
-            src_ids = token_ids[:split_point]
-            tgt_ids = token_ids[split_point:]
-        else:
-            src_ids = token_ids[:-1]
-            tgt_ids = token_ids[-1:]
-
-        # --- TRUNCATE before padding ---
-        src_ids = src_ids[:self.max_len]
-        tgt_ids = tgt_ids[:self.max_len - 2]  # leave room for <START> and <END>
-
-        # Encoder sequence
-        encoder_ids = src_ids + [self.pad_idx] * (self.max_len - len(src_ids))
-
-        # Decoder sequences
-        decoder_input_ids = [self.start_idx] + tgt_ids
-        decoder_target_ids = tgt_ids + [self.end_idx]
-
-        # Pad to fixed length
-        decoder_input_ids = decoder_input_ids + [self.pad_idx] * (self.max_len - len(decoder_input_ids))
-        decoder_target_ids = decoder_target_ids + [self.pad_idx] * (self.max_len - len(decoder_target_ids))
-
-        # Final safety truncation
-        decoder_input_ids = decoder_input_ids[:self.max_len]
-        decoder_target_ids = decoder_target_ids[:self.max_len]
-
-        return {
-            'encoder_input': torch.tensor(encoder_ids, dtype=torch.long),
-            'decoder_input': torch.tensor(decoder_input_ids, dtype=torch.long),
-            'decoder_target': torch.tensor(decoder_target_ids, dtype=torch.long)
-        }
 
 # ------------------------------------
-# Minimal Dataset meta to inject special tokens
+# DatasetMeta to inject special tokens
 # ------------------------------------
 class DatasetMeta:
-    """Holds special token IDs consistent with training-time Dataset behavior."""
+    """Holds special token IDs consistent with notebook Dataset behavior."""
     def __init__(self, tokenizer: BPETokenizer):
         # Special tokens
         self.pad_token = '<PAD>'
@@ -250,7 +179,7 @@ class DatasetMeta:
 
 
 # ------------------------------------
-# Transformer Model (Encoder-Decoder)
+# Transformer (hyperparams aligned with notebook defaults)
 # ------------------------------------
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000, dropout=0.1):
@@ -362,9 +291,9 @@ class DecoderLayer(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, vocab_size, d_model=256, num_heads=2, d_ff=1024,
-                 num_encoder_layers=2, num_decoder_layers=2, max_len=512,
-                 dropout=0.1, pad_idx=0):
+    def __init__(self, vocab_size, d_model=256, num_heads=2, d_ff=512,
+                 num_encoder_layers=2, num_decoder_layers=2, max_len=50,
+                 dropout=0.3, pad_idx=0):
         super().__init__()
         self.d_model = d_model
         self.pad_idx = pad_idx
@@ -493,17 +422,17 @@ def _build_model_for_tokenizer(tokenizer: BPETokenizer,
                                config: Optional[dict] = None) -> Transformer:
     """
     Build a Transformer using vocab size derived from tokenizer AFTER special tokens
-    have been injected via DatasetMeta.
+    have been injected via DatasetMeta. Defaults match notebook config.
     """
     vocab_size = len(tokenizer.token_to_id)
     cfg = dict(
         d_model=256,
         num_heads=2,
-        d_ff=1024,
+        d_ff=512,
         num_encoder_layers=2,
         num_decoder_layers=2,
         max_len=50,
-        dropout=0.1
+        dropout=0.3
     )
     if config:
         cfg.update(config)
