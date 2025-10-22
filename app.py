@@ -1,7 +1,7 @@
 import streamlit as st
 import torch
 from torch.serialization import add_safe_globals
-from Assignment2_fromscratch import (
+from assignment2_fromscratch import (
     BPETokenizer, 
     UrduChatbotDataset, 
     Transformer, 
