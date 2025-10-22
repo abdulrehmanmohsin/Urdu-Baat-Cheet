@@ -52,7 +52,7 @@ def load_model():
                 "num_encoder_layers": 2,
                 "num_decoder_layers": 2,
                 "max_len": 50,
-                "dropout": 0.3
+                "dropout": 0.1
             }
         
         # Build dataset meta tokens (<PAD>, <START>, <END>, <UNK>)
