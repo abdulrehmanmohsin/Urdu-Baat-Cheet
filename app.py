@@ -1,5 +1,8 @@
 import streamlit as st
 import torch
+import traceback
+
+
 from assignment2_fromscratch import (
     BPETokenizer,
     UrduChatbotDataset,
@@ -71,6 +74,8 @@ def load_model():
         2. Match PyTorch version with your training environment.
         3. Re-run 'save_tokenizer.py' if tokenizer.json is missing.
         """)
+        st.code(traceback.format_exc())  # 👈 shows detailed stack trace in Streamlit
+
         st.stop()
 
 
