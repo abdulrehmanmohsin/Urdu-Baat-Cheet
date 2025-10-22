@@ -71,7 +71,10 @@ def load_model():
             pad_idx=dataset.pad_idx
         )
 
-        model.load_state_dict(checkpoint["model_state_dict"])
+        if "model_state_dict" in checkpoint:
+            model.load_state_dict(checkpoint["model_state_dict"], strict=False)
+        else:
+            model.load_state_dict(checkpoint, strict=False)
         model.eval()
 
         return model, tokenizer, dataset
