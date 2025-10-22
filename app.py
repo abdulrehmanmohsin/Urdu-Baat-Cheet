@@ -40,6 +40,15 @@ def load_model():
         if tokenizer is None:
             st.info("Loading tokenizer from tokenizer.json...")
             tokenizer = BPETokenizer.load(tokenizer_path)
+        
+        # 🔧 Ensure special tokens exist (match training vocab size)
+        for t in ['<PAD>', '<START>', '<END>', '<UNK>']:
+            if t not in tokenizer.token_to_id:
+                idx = len(tokenizer.token_to_id)
+                tokenizer.token_to_id[t] = idx
+                tokenizer.id_to_token[idx] = t
+
+        
         config = checkpoint.get("config")
         
         # Fallback if config missing
