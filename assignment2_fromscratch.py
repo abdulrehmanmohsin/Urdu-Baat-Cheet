@@ -656,106 +656,106 @@ config = {
     'learning_rate': 1e-4,
 }
 
-# Load data
-print("Loading data...")
-#data_path = os.path.join(base_dir, "cleaned_urdu_text.txt")
-with open("cleaned_urdu_text.txt", 'r', encoding='utf-8') as f:
-    sentences = [line.strip() for line in f if line.strip()]
+# # Load data
+# print("Loading data...")
+# #data_path = os.path.join(base_dir, "cleaned_urdu_text.txt")
+# with open("cleaned_urdu_text.txt", 'r', encoding='utf-8') as f:
+#     sentences = [line.strip() for line in f if line.strip()]
 
-print(f"Loaded {len(sentences)} sentences")
+# print(f"Loaded {len(sentences)} sentences")
 
-# Train tokenizer
-print("Training BPE tokenizer...")
-tokenizer = BPETokenizer(vocab_size=config['vocab_size'])
-tokenizer.train(sentences[:5000], verbose=True)  # Subset for speed
+# # Train tokenizer
+# print("Training BPE tokenizer...")
+# tokenizer = BPETokenizer(vocab_size=config['vocab_size'])
+# tokenizer.train(sentences[:5000], verbose=True)  # Subset for speed
 
-# Prepare dataset
-print("Preparing dataset...")
-random.shuffle(sentences)
-train_size = int(0.8 * len(sentences))
-val_size = int(0.1 * len(sentences))
+# # Prepare dataset
+# print("Preparing dataset...")
+# random.shuffle(sentences)
+# train_size = int(0.8 * len(sentences))
+# val_size = int(0.1 * len(sentences))
 
-train_sentences = sentences[:train_size]
-val_sentences = sentences[train_size:train_size + val_size]
+# train_sentences = sentences[:train_size]
+# val_sentences = sentences[train_size:train_size + val_size]
 
-train_dataset = UrduChatbotDataset(train_sentences, tokenizer, config['max_len'])
-val_dataset = UrduChatbotDataset(val_sentences, tokenizer, config['max_len'])
+# train_dataset = UrduChatbotDataset(train_sentences, tokenizer, config['max_len'])
+# val_dataset = UrduChatbotDataset(val_sentences, tokenizer, config['max_len'])
 
-train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False)
+# train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
+# val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False)
 
-vocab_size = len(tokenizer.token_to_id) + 4
+# vocab_size = len(tokenizer.token_to_id) + 4
 
-# Create model
-print("Creating model...")
-model = Transformer(
-    vocab_size=vocab_size,
-    d_model=config['d_model'],
-    num_heads=config['num_heads'],
-    d_ff=config['d_ff'],
-    num_encoder_layers=config['num_encoder_layers'],
-    num_decoder_layers=config['num_decoder_layers'],
-    max_len=config['max_len'],
-    dropout=config['dropout'],
-    pad_idx=train_dataset.pad_idx
-).to(device)
-print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
+# # Create model
+# print("Creating model...")
+# model = Transformer(
+#     vocab_size=vocab_size,
+#     d_model=config['d_model'],
+#     num_heads=config['num_heads'],
+#     d_ff=config['d_ff'],
+#     num_encoder_layers=config['num_encoder_layers'],
+#     num_decoder_layers=config['num_decoder_layers'],
+#     max_len=config['max_len'],
+#     dropout=config['dropout'],
+#     pad_idx=train_dataset.pad_idx
+# ).to(device)
+# print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
-# Training loop
-criterion = nn.CrossEntropyLoss(ignore_index=train_dataset.pad_idx)
-optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'], betas=(0.9, 0.98), eps=1e-9)
-#Used these values to make training faster and less smooth, encouraging quicker adaptation to new gradients.
+# # Training loop
+# criterion = nn.CrossEntropyLoss(ignore_index=train_dataset.pad_idx)
+# optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'], betas=(0.9, 0.98), eps=1e-9)
+# #Used these values to make training faster and less smooth, encouraging quicker adaptation to new gradients.
 
-best_val_loss = float('inf')
-train_losses = []
-val_losses = []
-best_bleu=-1.0
+# best_val_loss = float('inf')
+# train_losses = []
+# val_losses = []
+# best_bleu=-1.0
 
-for epoch in range(config['num_epochs']):
-    print(f"Epoch {epoch + 1}/{config['num_epochs']}")
-    train_loss = train_epoch(model, train_loader, criterion, optimizer, device)
-    val_loss = validate(model, val_loader, criterion, device)
+# for epoch in range(config['num_epochs']):
+#     print(f"Epoch {epoch + 1}/{config['num_epochs']}")
+#     train_loss = train_epoch(model, train_loader, criterion, optimizer, device)
+#     val_loss = validate(model, val_loader, criterion, device)
 
-    train_losses.append(train_loss)
-    val_losses.append(val_loss)
-    ppl=math.exp(val_loss)
-    metrics = eval_bleu_chrf(
-    model, tokenizer, val_dataset, val_sentences,
-    max_gen_len=config['max_len'], device=device,
-    sample_size=2000
-    )
-    print(
-        f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
-        f"PPL : {ppl:.4f} | BLEU: {metrics['bleu_score']:.4f} | chrf: {metrics['chrf_score']:.4f} "
-        f"| n={metrics['n_eval']}"
-    )
-    if val_loss < best_val_loss:
-        best_val_loss = val_loss
-        model_save_path = "best_model_notebook.pt"
-        torch.save(model.state_dict(), model_save_path)
-        print("★ Best model saved!")
+#     train_losses.append(train_loss)
+#     val_losses.append(val_loss)
+#     ppl=math.exp(val_loss)
+#     metrics = eval_bleu_chrf(
+#     model, tokenizer, val_dataset, val_sentences,
+#     max_gen_len=config['max_len'], device=device,
+#     sample_size=2000
+#     )
+#     print(
+#         f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
+#         f"PPL : {ppl:.4f} | BLEU: {metrics['bleu_score']:.4f} | chrf: {metrics['chrf_score']:.4f} "
+#         f"| n={metrics['n_eval']}"
+#     )
+#     if val_loss < best_val_loss:
+#         best_val_loss = val_loss
+#         model_save_path = "best_model_notebook.pt"
+#         torch.save(model.state_dict(), model_save_path)
+#         print("★ Best model saved!")
 
-    if metrics['bleu_score'] > best_bleu:
-        best_bleu = metrics['bleu_score']
-        model_save_path = "best_BLEU_model.pt"
-        torch.save(model.state_dict(), model_save_path)
-        print("★ New best BLEU — saved best model!")
-    # if val_loss < 0.1:
-    #   break
-    # if val_loss - train_loss > 0.9:
-    #   break
-print("Training complete!")
+#     if metrics['bleu_score'] > best_bleu:
+#         best_bleu = metrics['bleu_score']
+#         model_save_path = "best_BLEU_model.pt"
+#         torch.save(model.state_dict(), model_save_path)
+#         print("★ New best BLEU — saved best model!")
+#     # if val_loss < 0.1:
+#     #   break
+#     # if val_loss - train_loss > 0.9:
+#     #   break
+# print("Training complete!")
 
-"""# Testing"""
+# """# Testing"""
 
-# Load best model
-#best_model=os.path.join(base_dir, "best_BLEU_model.pt")
-model.load_state_dict(torch.load(best_model, map_location=device))
+# # Load best model
+# #best_model=os.path.join(base_dir, "best_BLEU_model.pt")
+# model.load_state_dict(torch.load(best_model, map_location=device))
 
-# Test generation
-print("Testing generation:")
-print("="*80)
-for text in ["تاہم اس میں بہت سے نیے فیچرز", "آج موسم"]:
-    out = generate_text(model, tokenizer, text,  device=device , max_len=30, greedy=True)
-    print("Input:", text)
-    print("Output:", out)
+# # Test generation
+# print("Testing generation:")
+# print("="*80)
+# for text in ["تاہم اس میں بہت سے نیے فیچرز", "آج موسم"]:
+#     out = generate_text(model, tokenizer, text,  device=device , max_len=30, greedy=True)
+#     print("Input:", text)
+#     print("Output:", out)
