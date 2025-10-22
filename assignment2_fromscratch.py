@@ -731,13 +731,13 @@ for epoch in range(config['num_epochs']):
     )
     if val_loss < best_val_loss:
         best_val_loss = val_loss
-        model_save_path = os.path.join(base_dir, "best_model_notebook.pt")
+        model_save_path = "best_model_notebook.pt"
         torch.save(model.state_dict(), model_save_path)
         print("★ Best model saved!")
 
     if metrics['bleu_score'] > best_bleu:
         best_bleu = metrics['bleu_score']
-        model_save_path = os.path.join(base_dir, "best_BLEU_model.pt")
+        model_save_path = "best_BLEU_model.pt"
         torch.save(model.state_dict(), model_save_path)
         print("★ New best BLEU — saved best model!")
     # if val_loss < 0.1:
